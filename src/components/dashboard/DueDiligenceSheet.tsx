@@ -384,6 +384,8 @@ export function DueDiligenceSheet({
               <Field id="dd-notes" label="Notas" kind="text" textarea value={p.notes}
                 onSave={(v, r) => save({ notes: v }, r, "Notas salvas")} />
             </section>
+
+            <AdSection p={p} checklist={checklist} onStatus={onStatus} />
           </TooltipProvider>
         )}
       </SheetContent>
