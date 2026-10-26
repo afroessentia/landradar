@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Check, CircleHelp, ExternalLink, Map as MapIcon, Satellite, ShoppingCart, Waves, X } from "lucide-react";
+import { Check, CircleHelp, Copy, ExternalLink, Map as MapIcon, Megaphone, Satellite, ShoppingCart, Waves, X } from "lucide-react";
 import { toast } from "sonner";
+import { adInputFromProperty, checklistMismatch, generateAd, isPortalCounty, joinAd, splitAd } from "@/lib/ad-generator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
