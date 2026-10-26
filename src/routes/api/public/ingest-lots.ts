@@ -34,8 +34,8 @@ export const Route = createFileRoute("/api/public/ingest-lots")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.WEBHOOK_SECRET;
-        const apifyToken = process.env.APIFY_TOKEN;
+        const secret = process.env["WEBHOOK_SECRET"];
+        const apifyToken = process.env["APIFY_TOKEN"];
         if (!secret || !apifyToken) return json({ error: "Servidor nao configurado" }, 500);
 
         const provided = request.headers.get("x-webhook-secret") ?? "";
@@ -70,7 +70,7 @@ export const Route = createFileRoute("/api/public/ingest-lots")({
           return json({ error: "Condado nao mapeado para este task", taskId }, 404);
         }
 
-        const items: Record<string, unknown>[] = [];
+        const items: any[] = [];
         const PAGE = 1000;
         for (let offset = 0; offset < 10000; offset += PAGE) {
           const res = await fetch(

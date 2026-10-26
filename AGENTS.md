@@ -16,3 +16,7 @@
 ## OTC data
 
 - Keep OTC records in `otc_properties`, county configuration in `counties_states`, and enriched reads in the security-invoker `v_properties` view; this preserves the supplied shared authenticated-access model and derived links without duplicating data.
+
+## Apify integration
+
+- Apify webhook ingest lives at the server route `src/routes/api/public/ingest-lots.ts` (verified by `x-webhook-secret`) and manual sync is the authenticated server fn in `src/lib/apify-sync.functions.ts`; this stack does not use new Supabase Edge Functions.
