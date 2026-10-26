@@ -4,6 +4,15 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LandRadarLogo } from "@/components/LandRadarLogo";
+import { MetricsCards, type MetricFilter } from "@/components/dashboard/MetricsCards";
+import { SyncApifyButton } from "@/components/dashboard/SyncApifyButton";
+import { ManualLotDialog } from "@/components/dashboard/ManualLotDialog";
+import { ALL_STATUSES, type PropertyStatus } from "@/types/property";
+
+interface DashboardSearch {
+  status?: PropertyStatus;
+  maxPrice?: number;
+}
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -14,12 +23,22 @@ export const Route = createFileRoute("/_authenticated/")({
       { property: "og:description", content: "Sistema de inteligência para aquisição remota de terrenos OTC nos EUA" },
     ],
   }),
+  validateSearch: (raw: Record<string, unknown>): DashboardSearch => {
+    const status = ALL_STATUSES.includes(raw.status as PropertyStatus) ? (raw.status as PropertyStatus) : undefined;
+    const mp = Number(raw.maxPrice);
+    return { status, maxPrice: raw.maxPrice != null && Number.isFinite(mp) && mp > 0 ? mp : undefined };
+  },
   component: Dashboard,
 });
 
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const search = Route.useSearch();
+
+  function selectMetric(next: MetricFilter) {
+    navigate({ to: "/", search: next, replace: true });
+  }
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -45,8 +64,15 @@ function Dashboard() {
         </div>
       </header>
       <main className="px-4 pt-16">
-        <div className="rounded-md border border-border bg-card p-4 text-sm text-muted-foreground">
-          Dashboard em construção
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Painel OTC</h1>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <SyncApifyButton />
+              <ManualLotDialog />
+            </div>
+          </div>
+          <MetricsCards current={search} onSelect={selectMetric} />
         </div>
       </main>
     </div>
