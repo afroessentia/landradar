@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { ALL_STATES } from "@/lib/filters-url";
+import { useCounties } from "@/hooks/use-properties";
+import { ALL_STATES, PRICE_MAX, PRICE_MIN, PRICE_PRESETS, activePricePreset, pruneCounties } from "@/lib/filters-url";
 import { STATE_NAMES, STATUS_META } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import { ALL_STATUSES, type PropertyFilters } from "@/types/property";
@@ -45,9 +46,20 @@ export function FiltersPanel({
   }, [q]);
 
   // Sliders: valor local durante o arraste, grava na URL ao soltar
-  const [price, setPrice] = useState(filters.maxPrice);
+  const [price, setPrice] = useState<[number, number]>([filters.minPrice, filters.maxPrice]);
   const [acres, setAcres] = useState(filters.minAcreage);
-  useEffect(() => setPrice(filters.maxPrice), [filters.maxPrice]);
+  useEffect(() => setPrice([filters.minPrice, filters.maxPrice]), [filters.minPrice, filters.maxPrice]);
+  const activePreset = activePricePreset(filters);
+  const fmt = (n: number) => `$${n.toLocaleString("en-US")}`;
+
+  const { data: allCounties = [] } = useCounties();
+  const activeCounties = allCounties.filter((c) => c.is_active);
+  const visibleCounties = filters.states.length
+    ? activeCounties.filter((c) => filters.states.includes(c.state))
+    : activeCounties;
+  const countyGroups = ALL_STATES.map((st) => ({ st, items: visibleCounties.filter((c) => c.state === st) })).filter(
+    (g) => g.items.length,
+  );
   useEffect(() => setAcres(filters.minAcreage), [filters.minAcreage]);
 
   return (
@@ -71,7 +83,10 @@ export function FiltersPanel({
             <label key={s} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted/40">
               <Checkbox
                 checked={filters.states.includes(s)}
-                onCheckedChange={() => onChange({ states: toggle(filters.states, s) })}
+                onCheckedChange={() => {
+                  const states = toggle(filters.states, s);
+                  onChange({ states, counties: pruneCounties(filters.counties, states, activeCounties) });
+                }}
               />
               <span className="font-mono text-xs text-foreground">{s}</span>
               <span className="truncate text-xs text-muted-foreground">{STATE_NAMES[s]}</span>
@@ -80,15 +95,66 @@ export function FiltersPanel({
         </div>
       </Section>
 
-      <Section title="Preço máximo OTC" right={<span className="font-mono text-xs text-primary">${price}</span>}>
+      <Section
+        title="Condado"
+        right={
+          filters.counties.length > 0 ? (
+            <button type="button" className="text-[11px] text-primary hover:underline" onClick={() => onChange({ counties: [] })}>
+              Limpar ({filters.counties.length})
+            </button>
+          ) : undefined
+        }
+      >
+        <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
+          {countyGroups.length === 0 && <span className="text-xs text-muted-foreground">Nenhum condado ativo.</span>}
+          {countyGroups.map((g) => (
+            <div key={g.st}>
+              <div className="px-1 font-mono text-[10px] text-muted-foreground">{g.st}</div>
+              {g.items.map((c) => (
+                <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-muted/40">
+                  <Checkbox
+                    checked={filters.counties.includes(c.id)}
+                    onCheckedChange={() => onChange({ counties: toggle(filters.counties, c.id) })}
+                  />
+                  <span className="truncate text-xs text-foreground">{c.county_name}</span>
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section
+        title="Faixa de preço OTC"
+        right={<span className="font-mono text-xs text-primary">{fmt(price[0])} a {fmt(price[1])}</span>}
+      >
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="inline-flex whitespace-nowrap rounded-md border border-border p-0.5" role="group" aria-label="Atalhos de faixa de preço">
+            {PRICE_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={activePreset === p.id}
+                onClick={() => onChange({ minPrice: p.min, maxPrice: p.max })}
+                className={cn(
+                  "rounded px-2 py-1 text-[11px] transition-colors",
+                  activePreset === p.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <Slider
-          min={100}
-          max={1500}
+          min={PRICE_MIN}
+          max={PRICE_MAX}
           step={50}
-          value={[price]}
-          onValueChange={([v]) => setPrice(v ?? price)}
-          onValueCommit={([v]) => v !== undefined && onChange({ maxPrice: v })}
-          aria-label="Preço máximo OTC"
+          minStepsBetweenThumbs={0}
+          value={price}
+          onValueChange={(v) => v.length === 2 && setPrice([v[0]!, v[1]!])}
+          onValueCommit={(v) => v.length === 2 && onChange({ minPrice: v[0]!, maxPrice: v[1]! })}
+          aria-label="Faixa de preço OTC"
         />
       </Section>
 
