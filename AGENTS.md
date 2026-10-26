@@ -12,3 +12,7 @@
 ## Brand mark
 
 - The product brand mark lives in `src/components/LandRadarLogo.tsx` and is the single source for the logo in the navbar and the login screen; keep the app icon as `public/favicon.svg`, referenced from the root route's `head()` in `src/routes/__root.tsx` (this stack has no `index.html`, so tab title, description and favicon all belong in that `head()`).
+
+## OTC data
+
+- Keep OTC records in `otc_properties`, county configuration in `counties_states`, and enriched reads in the security-invoker `v_properties` view; this preserves the supplied shared authenticated-access model and derived links without duplicating data.

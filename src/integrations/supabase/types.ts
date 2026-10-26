@@ -14,16 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      counties_states: {
+        Row: {
+          apify_task_id: string | null
+          county_name: string
+          gis_url_template: string | null
+          id: string
+          is_active: boolean
+          portal_buy_url: string | null
+          state: Database["public"]["Enums"]["us_state"]
+        }
+        Insert: {
+          apify_task_id?: string | null
+          county_name: string
+          gis_url_template?: string | null
+          id?: string
+          is_active?: boolean
+          portal_buy_url?: string | null
+          state: Database["public"]["Enums"]["us_state"]
+        }
+        Update: {
+          apify_task_id?: string | null
+          county_name?: string
+          gis_url_template?: string | null
+          id?: string
+          is_active?: boolean
+          portal_buy_url?: string | null
+          state?: Database["public"]["Enums"]["us_state"]
+        }
+        Relationships: []
+      }
+      otc_properties: {
+        Row: {
+          acreage: number | null
+          county_state_id: string
+          created_at: string
+          direct_buy_url: string | null
+          due_diligence_checklist: Json
+          favorite: boolean
+          id: string
+          latitude: number | null
+          legal_description: string | null
+          longitude: number | null
+          marketing_copy_generated: string | null
+          notes: string | null
+          otc_price: number | null
+          parcel_id: string
+          raw_payload: Json | null
+          rejection_reason: string | null
+          status: Database["public"]["Enums"]["property_status"]
+          subdivision: string | null
+          target_sale_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          acreage?: number | null
+          county_state_id: string
+          created_at?: string
+          direct_buy_url?: string | null
+          due_diligence_checklist?: Json
+          favorite?: boolean
+          id?: string
+          latitude?: number | null
+          legal_description?: string | null
+          longitude?: number | null
+          marketing_copy_generated?: string | null
+          notes?: string | null
+          otc_price?: number | null
+          parcel_id: string
+          raw_payload?: Json | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          subdivision?: string | null
+          target_sale_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          acreage?: number | null
+          county_state_id?: string
+          created_at?: string
+          direct_buy_url?: string | null
+          due_diligence_checklist?: Json
+          favorite?: boolean
+          id?: string
+          latitude?: number | null
+          legal_description?: string | null
+          longitude?: number | null
+          marketing_copy_generated?: string | null
+          notes?: string | null
+          otc_price?: number | null
+          parcel_id?: string
+          raw_payload?: Json | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          subdivision?: string | null
+          target_sale_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otc_properties_county_state_id_fkey"
+            columns: ["county_state_id"]
+            isOneToOne: false
+            referencedRelation: "counties_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      v_properties: {
+        Row: {
+          acreage: number | null
+          county_name: string | null
+          county_state_id: string | null
+          created_at: string | null
+          direct_buy_url: string | null
+          due_diligence_checklist: Json | null
+          est_margin: number | null
+          favorite: boolean | null
+          gis_url: string | null
+          id: string | null
+          latitude: number | null
+          legal_description: string | null
+          longitude: number | null
+          marketing_copy_generated: string | null
+          notes: string | null
+          otc_price: number | null
+          parcel_id: string | null
+          portal_buy_url: string | null
+          raw_payload: Json | null
+          rejection_reason: string | null
+          satellite_url: string | null
+          state: Database["public"]["Enums"]["us_state"] | null
+          status: Database["public"]["Enums"]["property_status"] | null
+          subdivision: string | null
+          target_sale_price: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otc_properties_county_state_id_fkey"
+            columns: ["county_state_id"]
+            isOneToOne: false
+            referencedRelation: "counties_states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      property_status:
+        | "new_detected"
+        | "due_diligence"
+        | "ready_to_buy"
+        | "purchased"
+        | "listed_for_sale"
+        | "sold"
+        | "rejected"
+      us_state: "AR" | "MS" | "AL" | "FL" | "NM" | "AZ"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +302,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      property_status: [
+        "new_detected",
+        "due_diligence",
+        "ready_to_buy",
+        "purchased",
+        "listed_for_sale",
+        "sold",
+        "rejected",
+      ],
+      us_state: ["AR", "MS", "AL", "FL", "NM", "AZ"],
+    },
   },
 } as const
