@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Brand mark
+
+- The product brand mark lives in `src/components/LandRadarLogo.tsx` and is the single source for the logo in the navbar and the login screen; keep the app icon as `public/favicon.svg`, referenced from the root route's `head()` in `src/routes/__root.tsx` (this stack has no `index.html`, so tab title, description and favicon all belong in that `head()`).
