@@ -1,3 +1,4 @@
+import { isPriceFiltered } from "@/lib/filters-url";
 import { useEffect } from "react";
 import {
   keepPreviousData,
@@ -29,6 +30,7 @@ export const propertyKeys = {
 /** Aplica os filtros (exceto preço) a um builder de v_properties. */
 function applyBaseFilters(q: any, f: PropertyFilters) {
   if (f.states.length) q = q.in("state", f.states);
+  if (f.counties.length) q = q.in("county_state_id", f.counties);
   if (f.statuses.length) q = q.in("status", f.statuses);
   if (f.onlyFavorites) q = q.eq("favorite", true);
   if (f.onlyWithGps) q = q.not("latitude", "is", null).not("longitude", "is", null);
@@ -50,7 +52,8 @@ async function fetchProperties(f: PropertyFilters): Promise<PropertiesResult> {
   const to = from + f.pageSize - 1;
 
   let q = applyBaseFilters(db.from("v_properties").select("*", { count: "exact" }), f);
-  q = q.lte("otc_price", f.maxPrice);
+  const priced = isPriceFiltered(f);
+  if (priced) q = q.gte("otc_price", f.minPrice).lte("otc_price", f.maxPrice);
   q = q
     .order(f.sortBy, { ascending: f.sortDir === "asc", nullsFirst: false })
     .order("id", { ascending: true })
@@ -61,7 +64,7 @@ async function fetchProperties(f: PropertyFilters): Promise<PropertiesResult> {
     f,
   ).is("otc_price", null);
 
-  const [main, missing] = await Promise.all([q, noPrice]);
+  const [main, missing] = await Promise.all([q, priced ? noPrice : Promise.resolve({ count: 0, error: null })]);
   if (main.error) throw main.error;
   if (missing.error) throw missing.error;
 
