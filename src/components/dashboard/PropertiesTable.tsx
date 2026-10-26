@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DueDiligenceSheet } from "@/components/dashboard/DueDiligenceSheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PropertiesSkeleton } from "@/components/PropertiesSkeleton";
@@ -32,16 +32,16 @@ import { cn } from "@/lib/utils";
 import { ALL_STATUSES, type Property, type PropertyFilters, type PropertySortBy, type PropertyStatus } from "@/types/property";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-const place = (p: Property) => `${p.state ?? "—"} · ${p.county_name ?? "—"}`;
+export const place = (p: Property) => `${p.state ?? "—"} · ${p.county_name ?? "—"}`;
 
-function copyParcel(id: string) {
+export function copyParcel(id: string) {
   navigator.clipboard
     .writeText(id)
     .then(() => toast.success("Parcel ID copiado"))
     .catch(() => toast.error("Não foi possível copiar"));
 }
 
-function Margin({ p }: { p: Property }) {
+export function Margin({ p }: { p: Property }) {
   if (p.otc_price == null || p.est_margin == null) return <span className="text-muted-foreground">-</span>;
   const pct = p.otc_price > 0 ? (p.est_margin / p.otc_price) * 100 : null;
   return (
@@ -53,7 +53,7 @@ function Margin({ p }: { p: Property }) {
   );
 }
 
-function Price({ p }: { p: Property }) {
+export function Price({ p }: { p: Property }) {
   return p.otc_price == null ? (
     <span className="text-muted-foreground">sem preço</span>
   ) : (
@@ -61,7 +61,7 @@ function Price({ p }: { p: Property }) {
   );
 }
 
-function ActionIcon({
+export function ActionIcon({
   icon: Icon,
   label,
   disabledHint,
@@ -118,7 +118,7 @@ function Actions({ p, onDD }: { p: Property; onDD: () => void }) {
   );
 }
 
-function StatusSelect({ p, onChange }: { p: Property; onChange: (s: PropertyStatus) => void }) {
+export function StatusSelect({ p, onChange }: { p: Property; onChange: (s: PropertyStatus) => void }) {
   const meta = STATUS_META[p.status];
   return (
     <div onClick={(e) => e.stopPropagation()}>
@@ -160,15 +160,20 @@ function FavStar({ p, onToggle }: { p: Property; onToggle: () => void }) {
 
 function RejectDialog({
   property,
+  initialReason,
   onCancel,
   onConfirm,
 }: {
   property: Property | null;
+  initialReason?: RejectionReason | undefined;
   onCancel: () => void;
   onConfirm: (reason: string) => void;
 }) {
   const [reason, setReason] = useState<RejectionReason | "">("");
   const [other, setOther] = useState("");
+  useEffect(() => {
+    if (property) setReason(initialReason ?? "");
+  }, [property, initialReason]);
   const valid = reason !== "" && (reason !== "other" || other.trim().length > 0);
 
   function close() {
@@ -269,13 +274,20 @@ export function PropertiesTable({
   const update = useUpdateProperty();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<Property | null>(null);
+  const [rejectPreset, setRejectPreset] = useState<RejectionReason | undefined>();
+  const lastSelected = useRef<Property | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
-  const selected = data?.rows.find((r) => r.id === selectedId) ?? null;
+  const found = data?.rows.find((r) => r.id === selectedId) ?? null;
+  if (found) lastSelected.current = found;
+  const selected = found ?? (lastSelected.current?.id === selectedId ? lastSelected.current : null);
   const totalPages = data ? Math.max(1, Math.ceil(data.total / filters.pageSize)) : 1;
 
   function changeStatus(p: Property, s: PropertyStatus) {
-    if (s === "rejected") return setRejecting(p);
+    if (s === "rejected") {
+      setRejectPreset(undefined);
+      return setRejecting(p);
+    }
     update.mutate({ id: p.id, patch: { status: s, rejection_reason: null } });
   }
   function toggleFav(p: Property) {
@@ -411,6 +423,7 @@ export function PropertiesTable({
 
       <RejectDialog
         property={rejecting}
+        initialReason={rejectPreset}
         onCancel={() => setRejecting(null)}
         onConfirm={(reason) => {
           if (rejecting) update.mutate({ id: rejecting.id, patch: { status: "rejected", rejection_reason: reason } });
@@ -418,16 +431,17 @@ export function PropertiesTable({
         }}
       />
 
-      {/* Gaveta provisória de Due Diligence */}
-      <Sheet open={!!selectedId} onOpenChange={(o) => !o && setSelectedId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>{selected ? place(selected) : "Lote"}</SheetTitle>
-            <SheetDescription className="font-mono">{selected?.parcel_id}</SheetDescription>
-          </SheetHeader>
-          <p className="mt-6 text-sm text-muted-foreground">Due Diligence em construção</p>
-        </SheetContent>
-      </Sheet>
+      <DueDiligenceSheet
+        property={selected}
+        open={!!selectedId}
+        onClose={() => setSelectedId(null)}
+        onStatus={(s) => selected && changeStatus(selected, s)}
+        onReject={(preset) => {
+          if (!selected) return;
+          setRejectPreset(preset);
+          setRejecting(selected);
+        }}
+      />
     </TooltipProvider>
   );
 }
