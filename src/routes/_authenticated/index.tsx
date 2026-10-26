@@ -10,8 +10,9 @@ import { MetricsCards } from "@/components/dashboard/MetricsCards";
 import { SyncApifyButton } from "@/components/dashboard/SyncApifyButton";
 import { ManualLotDialog } from "@/components/dashboard/ManualLotDialog";
 import { FiltersPanel } from "@/components/dashboard/FiltersPanel";
+import { PropertiesTable } from "@/components/dashboard/PropertiesTable";
 import { ResultsCounter } from "@/components/dashboard/ResultsCounter";
-import { changeFilters, filtersToSearch, searchToFilters, validateFilterSearch } from "@/lib/filters-url";
+import { changeFilters, countActiveFilters, filtersToSearch, searchToFilters, validateFilterSearch } from "@/lib/filters-url";
 import type { PropertyFilters } from "@/types/property";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -50,7 +51,7 @@ function Dashboard() {
 
   const panel = <FiltersPanel filters={filters} onChange={updateFilters} onReset={resetFilters} />;
   // Filtros fora do padrão (ignora a página)
-  const activeCount = Object.keys(filtersToSearch({ ...filters, page: 0 })).length;
+  const activeCount = countActiveFilters(filters);
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,6 +120,11 @@ function Dashboard() {
               <div className="hidden rounded-md border border-border bg-card px-3 py-2 md:block">
                 <ResultsCounter filters={filters} />
               </div>
+              <PropertiesTable
+                filters={filters}
+                onReset={resetFilters}
+                onNavigate={(next) => navigate({ to: "/", search: filtersToSearch(next), replace: true })}
+              />
             </section>
           </div>
         </div>

@@ -2,10 +2,12 @@ import {
   ALL_STATUSES,
   DEFAULT_FILTERS,
   type PropertyFilters,
+  type PropertySortBy,
   type PropertyStatus,
   type UsState,
 } from "@/types/property";
 
+export const SORTABLE: PropertySortBy[] = ["est_margin", "otc_price", "acreage", "created_at"];
 export const ALL_STATES: UsState[] = ["AR", "MS", "AL", "FL", "NM", "AZ"];
 
 /** Parâmetros da URL (todos opcionais, apenas o que difere do padrão). */
@@ -18,6 +20,8 @@ export interface FilterSearch {
   fav?: number | undefined;
   q?: string | undefined;
   page?: number | undefined;
+  sortBy?: string | undefined;
+  sortDir?: string | undefined;
 }
 
 const list = (v: unknown) =>
@@ -49,6 +53,10 @@ export function validateFilterSearch(raw: Record<string, unknown>): FilterSearch
   if (q.trim()) out.q = q;
   const page = numOr(raw["page"]);
   if (page !== undefined && page > 1) out.page = Math.floor(page);
+  const sb = String(raw["sortBy"] ?? "");
+  if (SORTABLE.includes(sb as PropertySortBy)) out.sortBy = sb;
+  const sd = String(raw["sortDir"] ?? "");
+  if (sd === "asc" || sd === "desc") out.sortDir = sd;
   return out;
 }
 
@@ -66,6 +74,8 @@ export function searchToFilters(s: FilterSearch): PropertyFilters {
     onlyFavorites: s.fav === 1,
     search: s.q ?? "",
     page: s.page && s.page > 1 ? s.page - 1 : 0,
+    sortBy: (s.sortBy as PropertySortBy) ?? DEFAULT_FILTERS.sortBy,
+    sortDir: s.sortDir === "asc" || s.sortDir === "desc" ? s.sortDir : DEFAULT_FILTERS.sortDir,
   };
 }
 
@@ -82,7 +92,17 @@ export function filtersToSearch(f: PropertyFilters): FilterSearch {
   if (f.onlyFavorites) out.fav = 1;
   if (f.search.trim()) out.q = f.search;
   if (f.page > 0) out.page = f.page + 1;
+  if (f.sortBy !== DEFAULT_FILTERS.sortBy || f.sortDir !== DEFAULT_FILTERS.sortDir) {
+    out.sortBy = f.sortBy;
+    out.sortDir = f.sortDir;
+  }
   return out;
+}
+
+/** Quantos filtros (sem página e ordenação) diferem do padrão. */
+export function countActiveFilters(f: PropertyFilters): number {
+  const { page: _p, sortBy: _b, sortDir: _d, ...rest } = filtersToSearch(f);
+  return Object.keys(rest).length;
 }
 
 /** Aplica uma mudança de filtro e volta para a página 1. */
