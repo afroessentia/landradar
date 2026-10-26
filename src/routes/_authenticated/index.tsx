@@ -11,7 +11,7 @@ import { SyncApifyButton } from "@/components/dashboard/SyncApifyButton";
 import { ManualLotDialog } from "@/components/dashboard/ManualLotDialog";
 import { FiltersPanel } from "@/components/dashboard/FiltersPanel";
 import { ResultsCounter } from "@/components/dashboard/ResultsCounter";
-import { changeFilters, searchToFilters, validateFilterSearch } from "@/lib/filters-url";
+import { changeFilters, filtersToSearch, searchToFilters, validateFilterSearch } from "@/lib/filters-url";
 import type { PropertyFilters } from "@/types/property";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -49,6 +49,8 @@ function Dashboard() {
   }
 
   const panel = <FiltersPanel filters={filters} onChange={updateFilters} onReset={resetFilters} />;
+  // Filtros fora do padrão (ignora a página)
+  const activeCount = Object.keys(filtersToSearch({ ...filters, page: 0 })).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,21 +79,44 @@ function Dashboard() {
           </div>
           <MetricsCards filters={filters} onChange={updateFilters} />
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
-            <aside className="hidden w-64 shrink-0 rounded-md border border-border bg-card p-3 lg:sticky lg:top-16 lg:block">
-              {panel}
-            </aside>
-            <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className="lg:hidden">
+          {/* Mobile (< 768px): contador sempre visível + botão Filtros */}
+          <div className="space-y-2 md:hidden">
+            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
+              <div className="min-w-0">
+                <ResultsCounter filters={filters} />
+              </div>
+              {activeCount > 0 && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+            <Collapsible open={mobileOpen} onOpenChange={setMobileOpen}>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 w-full">
-                  <SlidersHorizontal className="h-4 w-4" /> Filtros
+                  <SlidersHorizontal className="h-4 w-4" /> Filtros{activeCount > 0 ? ` (${activeCount})` : ""}
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 rounded-md border border-border bg-card p-3">{panel}</CollapsibleContent>
+              <CollapsibleContent className="mt-2 space-y-3 rounded-md border border-border bg-card p-3">
+                {panel}
+                <Button size="sm" className="h-8 w-full" onClick={() => setMobileOpen(false)}>
+                  Aplicar / Fechar
+                </Button>
+              </CollapsibleContent>
             </Collapsible>
+          </div>
+
+          <div className="flex flex-col gap-3 md:flex-row md:items-start">
+            <aside className="hidden w-64 shrink-0 rounded-md border border-border bg-card p-3 md:sticky md:top-16 md:block">
+              {panel}
+            </aside>
 
             <section className="min-w-0 flex-1 space-y-2">
-              <div className="rounded-md border border-border bg-card px-3 py-2">
+              <div className="hidden rounded-md border border-border bg-card px-3 py-2 md:block">
                 <ResultsCounter filters={filters} />
               </div>
             </section>
