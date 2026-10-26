@@ -6,7 +6,7 @@ export const triggerApifySync = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { county_state_id?: string } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
-    const apifyToken = process.env.APIFY_TOKEN;
+    const apifyToken = process.env["APIFY_TOKEN"];
     if (!apifyToken) throw new Error("APIFY_TOKEN nao configurado");
 
     const supabase = context.supabase as any;
