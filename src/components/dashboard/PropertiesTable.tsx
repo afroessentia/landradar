@@ -165,7 +165,7 @@ function RejectDialog({
   onConfirm,
 }: {
   property: Property | null;
-  initialReason?: RejectionReason;
+  initialReason?: RejectionReason | undefined;
   onCancel: () => void;
   onConfirm: (reason: string) => void;
 }) {
