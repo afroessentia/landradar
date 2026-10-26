@@ -62,6 +62,9 @@ export type PropertySortBy = "est_margin" | "otc_price" | "acreage" | "created_a
 
 export interface PropertyFilters {
   states: UsState[];
+  /** ids de counties_states */
+  counties: string[];
+  minPrice: number;
   maxPrice: number;
   minAcreage: number;
   onlyWithGps: boolean;
@@ -87,7 +90,9 @@ export const ALL_STATUSES: PropertyStatus[] = [
 
 export const DEFAULT_FILTERS: PropertyFilters = {
   states: [],
-  maxPrice: 800,
+  counties: [],
+  minPrice: 0,
+  maxPrice: 3000,
   minAcreage: 0,
   onlyWithGps: false,
   statuses: ALL_STATUSES.filter((s) => s !== "rejected" && s !== "sold"),
