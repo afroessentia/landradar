@@ -1,34 +1,21 @@
 import { Radar } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-type LandRadarLogoProps = {
-  className?: string;
-  iconClassName?: string;
-  textClassName?: string;
-  showText?: boolean;
-};
-
-export function LandRadarLogo({
-  className,
-  iconClassName,
-  textClassName,
-  showText = true,
-}: LandRadarLogoProps) {
+export const LandRadarLogo = () => {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <Radar className={cn("h-4 w-4 shrink-0 text-primary", iconClassName)} />
-      {showText && (
-        <span
-          className={cn(
-            "text-sm font-semibold tracking-[0.18em] text-foreground",
-            textClassName,
-          )}
-        >
-          LANDRADAR
+    <div className="flex items-center gap-3 select-none">
+      <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(0,210,133,0.15)]">
+        <Radar className="w-5 h-5 animate-pulse" />
+      </div>
+      <div className="flex flex-col">
+        <div className="flex items-center text-xl font-black tracking-wider text-foreground">
+          LAND<span className="text-primary">RADAR</span>
+        </div>
+        <span className="text-[10px] font-mono tracking-widest uppercase text-muted-foreground">
+          OTC Intelligence Terminal
         </span>
-      )}
-    </span>
+      </div>
+    </div>
   );
-}
+};
 
 export default LandRadarLogo;
