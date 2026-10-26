@@ -139,6 +139,18 @@ export function useMetrics() {
   return query;
 }
 
+/** Recalcula os campos derivados da view (satellite_url, est_margin) no cache otimista. */
+export function withDerived(p: Property): Property {
+  return {
+    ...p,
+    satellite_url:
+      p.latitude != null && p.longitude != null
+        ? `https://www.google.com/maps/@${p.latitude},${p.longitude},18z/data=!3m1!1e3`
+        : null,
+    est_margin: (p.target_sale_price ?? 0) - (p.otc_price ?? 0),
+  };
+}
+
 export function useUpdateProperty() {
   const qc = useQueryClient();
   return useMutation({
@@ -153,7 +165,7 @@ export function useUpdateProperty() {
       });
       qc.setQueriesData<PropertiesResult>({ queryKey: ["properties", "list"] }, (old) =>
         old
-          ? { ...old, rows: old.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
+          ? { ...old, rows: old.rows.map((r) => (r.id === id ? withDerived({ ...r, ...patch }) : r)) }
           : old,
       );
       return { snapshots };
