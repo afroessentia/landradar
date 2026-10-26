@@ -19,3 +19,19 @@ describe("filtros na URL", () => {
     expect(changeFilters(f, { onlyFavorites: true })).toEqual({ fav: 1 });
   });
 });
+
+import { countActiveFilters as _caf, filtersToSearch as _fts, searchToFilters as _stf } from "@/lib/filters-url";
+import { DEFAULT_FILTERS as _DF } from "@/types/property";
+describe("ordenação na URL", () => {
+  it("não grava a ordenação padrão (margem desc)", () => {
+    expect(_fts(_DF)).toEqual({});
+  });
+  it("grava sortBy e sortDir quando diferem do padrão", () => {
+    expect(_fts({ ..._DF, sortBy: "acreage", sortDir: "asc" })).toEqual({ sortBy: "acreage", sortDir: "asc" });
+    expect(_stf({ sortBy: "acreage", sortDir: "asc" }).sortBy).toBe("acreage");
+  });
+  it("ordenação e página não contam como filtro ativo", () => {
+    expect(_caf({ ..._DF, sortBy: "acreage", page: 3 })).toBe(0);
+    expect(_caf({ ..._DF, onlyFavorites: true })).toBe(1);
+  });
+});
