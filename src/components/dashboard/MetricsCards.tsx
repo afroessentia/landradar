@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import type { PropertyStatus } from "@/types/property";
 
 export interface MetricFilter {
-  status?: PropertyStatus;
-  maxPrice?: number;
+  status?: PropertyStatus | undefined;
+  maxPrice?: number | undefined;
 }
 
 interface CardDef {

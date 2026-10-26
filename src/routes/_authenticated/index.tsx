@@ -10,8 +10,8 @@ import { ManualLotDialog } from "@/components/dashboard/ManualLotDialog";
 import { ALL_STATUSES, type PropertyStatus } from "@/types/property";
 
 interface DashboardSearch {
-  status?: PropertyStatus;
-  maxPrice?: number;
+  status?: PropertyStatus | undefined;
+  maxPrice?: number | undefined;
 }
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -24,9 +24,9 @@ export const Route = createFileRoute("/_authenticated/")({
     ],
   }),
   validateSearch: (raw: Record<string, unknown>): DashboardSearch => {
-    const status = ALL_STATUSES.includes(raw.status as PropertyStatus) ? (raw.status as PropertyStatus) : undefined;
-    const mp = Number(raw.maxPrice);
-    return { status, maxPrice: raw.maxPrice != null && Number.isFinite(mp) && mp > 0 ? mp : undefined };
+    const status = ALL_STATUSES.includes(raw["status"] as PropertyStatus) ? (raw["status"] as PropertyStatus) : undefined;
+    const mp = Number(raw["maxPrice"]);
+    return { status, maxPrice: raw["maxPrice"] != null && Number.isFinite(mp) && mp > 0 ? mp : undefined };
   },
   component: Dashboard,
 });
