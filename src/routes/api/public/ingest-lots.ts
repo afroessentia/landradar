@@ -33,6 +33,7 @@ const safeEqual = (a: string, b: string): boolean => {
 export const Route = createFileRoute("/api/public/ingest-lots")({
   server: {
     handlers: {
+      GET: async () => json({ error: "Method not allowed" }, 405),
       POST: async ({ request }) => {
         const secret = process.env["WEBHOOK_SECRET"];
         const apifyToken = process.env["APIFY_TOKEN"];
