@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Check, CircleHelp, ExternalLink, Map as MapIcon, Satellite, ShoppingCart, Waves, X } from "lucide-react";
+import { Check, CircleHelp, Copy, ExternalLink, Map as MapIcon, Megaphone, Satellite, ShoppingCart, Waves, X } from "lucide-react";
 import { toast } from "sonner";
+import { adInputFromProperty, checklistMismatch, generateAd, isPortalCounty, joinAd, splitAd } from "@/lib/ad-generator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,6 +124,137 @@ function Shortcut({ href, label, icon: Icon, hint }: { href: string | null; labe
         <Icon className="h-4 w-4" /> {label} <ExternalLink className="ml-auto h-3 w-3 opacity-60" />
       </a>
     </Button>
+  );
+}
+
+function AdSection({
+  p,
+  checklist,
+  onStatus,
+}: {
+  p: Property;
+  checklist: DueDiligenceChecklist;
+  onStatus: (s: PropertyStatus) => void;
+}) {
+  const update = useUpdateProperty();
+  const saved = p.marketing_copy_generated ?? "";
+  const [title, setTitle] = useState(() => splitAd(saved).title);
+  const [body, setBody] = useState(() => splitAd(saved).body);
+  useEffect(() => {
+    const s = splitAd(saved);
+    setTitle(s.title);
+    setBody(s.body);
+  }, [p.id, saved]);
+
+  const missingGps = p.latitude == null || p.longitude == null;
+  const missingPrice = p.target_sale_price == null;
+  const blocked = missingGps || missingPrice;
+
+  function persist(t: string, b: string) {
+    update.mutate({ id: p.id, patch: { marketing_copy_generated: joinAd(t, b) } });
+  }
+
+  function generate() {
+    if (saved.trim() && !window.confirm("Isso vai substituir o texto atual. Continuar?")) return;
+    const ad = generateAd(adInputFromProperty(p, checklist));
+    setTitle(ad.title);
+    setBody(ad.body);
+    persist(ad.title, ad.body);
+  }
+
+  function useShortTitle() {
+    const ad = generateAd(adInputFromProperty(p, checklist));
+    setTitle(ad.shortTitle);
+    persist(ad.shortTitle, body);
+  }
+
+  function copyText(text: string) {
+    navigator.clipboard.writeText(text).then(() => toast.success("Copiado", { duration: 1200 }));
+  }
+
+  const stale = checklistMismatch(joinAd(title, body), checklist);
+  const titleLen = title.length;
+
+  return (
+    <section className="mt-4 space-y-2">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Anúncio de venda</div>
+
+      <Button size="sm" className="h-8 w-full" disabled={blocked} onClick={generate}>
+        <Megaphone className="h-4 w-4" /> Gerar Anúncio de Venda
+      </Button>
+      {missingGps && <p className="text-[11px] text-muted-foreground">Adicione as coordenadas GPS para gerar o anúncio</p>}
+      {!missingGps && missingPrice && <p className="text-[11px] text-muted-foreground">Defina o preço alvo de venda</p>}
+      {isPortalCounty(p.county_name) && (
+        <p className="text-[11px] text-muted-foreground">
+          Este lote não tem condado real cadastrado. Se quiser, adicione o condado editando o texto.
+        </p>
+      )}
+
+      {(title || body) && (
+        <>
+          {stale && (
+            <p className="rounded border border-border bg-muted/20 p-2 text-[11px] text-muted-foreground">
+              O checklist mudou desde a geração. Gere de novo para atualizar o anúncio.
+            </p>
+          )}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="ad-title" className="text-[11px] text-muted-foreground">Título</Label>
+              <span className="text-[10px] font-mono">
+                <span className="text-muted-foreground">{titleLen}/150 Facebook</span>
+                {" · "}
+                <span className={titleLen > 70 ? "text-destructive" : "text-muted-foreground"}>{titleLen}/70 Craigslist</span>
+              </span>
+            </div>
+            <Input
+              id="ad-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => persist(title, body)}
+              className="h-8 text-xs"
+            />
+            {titleLen > 70 && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={useShortTitle}>
+                Usar título curto
+              </Button>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="ad-body" className="text-[11px] text-muted-foreground">Corpo</Label>
+            <Textarea
+              id="ad-body"
+              value={body}
+              rows={10}
+              onChange={(e) => setBody(e.target.value)}
+              onBlur={() => persist(title, body)}
+              className="text-xs"
+            />
+          </div>
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" className="h-7 flex-1 text-xs" onClick={() => copyText(title)}>
+              <Copy className="h-3 w-3" /> Copiar título
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 flex-1 text-xs" onClick={() => copyText(body)}>
+              <Copy className="h-3 w-3" /> Copiar corpo
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 flex-1 text-xs" onClick={() => copyText(joinAd(title, body))}>
+              <Copy className="h-3 w-3" /> Copiar tudo
+            </Button>
+          </div>
+          {p.status === "purchased" && (
+            <Button
+              size="sm"
+              className="h-8 w-full"
+              onClick={() => {
+                if (window.confirm("Marcar este lote como Anunciado (listed_for_sale)?")) onStatus("listed_for_sale");
+              }}
+            >
+              Marcar como Anunciado
+            </Button>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -252,6 +384,8 @@ export function DueDiligenceSheet({
               <Field id="dd-notes" label="Notas" kind="text" textarea value={p.notes}
                 onSave={(v, r) => save({ notes: v }, r, "Notas salvas")} />
             </section>
+
+            <AdSection p={p} checklist={checklist} onStatus={onStatus} />
           </TooltipProvider>
         )}
       </SheetContent>
