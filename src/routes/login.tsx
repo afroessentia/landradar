@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LandRadarLogo } from "@/components/LandRadarLogo";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -14,10 +15,10 @@ export const Route = createFileRoute("/login")({
   },
   head: () => ({
     meta: [
-      { title: "Entrar — US Land OTC Hunter" },
-      { name: "description", content: "Acesse o terminal US Land OTC Hunter." },
-      { property: "og:title", content: "Entrar — US Land OTC Hunter" },
-      { property: "og:description", content: "Acesse o terminal US Land OTC Hunter." },
+      { title: "Entrar — LandRadar | OTC Intelligence Terminal" },
+      { name: "description", content: "Acesse o terminal LandRadar." },
+      { property: "og:title", content: "Entrar — LandRadar" },
+      { property: "og:description", content: "Acesse o terminal LandRadar." },
     ],
   }),
   component: LoginPage,
@@ -93,9 +94,8 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-md border border-border bg-card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-sm font-semibold tracking-[0.18em]">US LAND OTC HUNTER</span>
-          <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+        <div className="mb-4 flex justify-center">
+          <LandRadarLogo />
         </div>
         <Tabs defaultValue="signin">
           <TabsList className="mb-3 grid w-full grid-cols-2">

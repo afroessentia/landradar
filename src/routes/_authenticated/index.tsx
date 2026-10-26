@@ -3,14 +3,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { LandRadarLogo } from "@/components/LandRadarLogo";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — US Land OTC Hunter" },
-      { name: "description", content: "Terminal de oportunidades de terrenos OTC nos EUA." },
-      { property: "og:title", content: "Dashboard — US Land OTC Hunter" },
-      { property: "og:description", content: "Terminal de oportunidades de terrenos OTC nos EUA." },
+      { title: "Dashboard — LandRadar | OTC Intelligence Terminal" },
+      { name: "description", content: "Sistema de inteligência para aquisição remota de terrenos OTC nos EUA" },
+      { property: "og:title", content: "Dashboard — LandRadar" },
+      { property: "og:description", content: "Sistema de inteligência para aquisição remota de terrenos OTC nos EUA" },
     ],
   }),
   component: Dashboard,
@@ -32,9 +33,7 @@ function Dashboard() {
       <header className="fixed inset-x-0 top-0 z-50 h-12 border-b border-border bg-card">
         <div className="flex h-full items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-[0.18em] text-foreground">
-              US LAND OTC HUNTER
-            </span>
+            <LandRadarLogo />
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-70" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
