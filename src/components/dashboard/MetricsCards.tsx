@@ -1,52 +1,61 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMetrics, type Metrics } from "@/hooks/use-properties";
 import { cn } from "@/lib/utils";
-import type { PropertyStatus } from "@/types/property";
-
-export interface MetricFilter {
-  status?: PropertyStatus | undefined;
-  maxPrice?: number | undefined;
-}
+import { DEFAULT_FILTERS, type PropertyFilters, type PropertyStatus } from "@/types/property";
 
 interface CardDef {
   key: keyof Metrics;
   label: string;
-  filter: { status: PropertyStatus; maxPrice?: number };
+  status: PropertyStatus;
+  maxPrice?: number;
 }
 
 const CARDS: CardDef[] = [
-  { key: "cheapNew", label: "Terrenos < $600 detectados", filter: { status: "new_detected", maxPrice: 600 } },
-  { key: "dueDiligence", label: "Em Due Diligence", filter: { status: "due_diligence" } },
-  { key: "purchased", label: "Comprados", filter: { status: "purchased" } },
-  { key: "listed", label: "Anunciados", filter: { status: "listed_for_sale" } },
+  { key: "cheapNew", label: "Terrenos < $600 detectados", status: "new_detected", maxPrice: 600 },
+  { key: "dueDiligence", label: "Em Due Diligence", status: "due_diligence" },
+  { key: "purchased", label: "Comprados", status: "purchased" },
+  { key: "listed", label: "Anunciados", status: "listed_for_sale" },
 ];
 
-export function isCardActive(card: CardDef["filter"], current: MetricFilter) {
-  return (
-    current.status === card.status &&
-    (card.maxPrice === undefined ? current.maxPrice === undefined : current.maxPrice === card.maxPrice)
-  );
+function isActive(c: CardDef, f: PropertyFilters) {
+  const onlyThis = f.statuses.length === 1 && f.statuses[0] === c.status;
+  if (!onlyThis) return false;
+  return c.maxPrice !== undefined ? f.maxPrice === c.maxPrice : f.maxPrice !== 600 || c.status !== "new_detected";
 }
 
 export function MetricsCards({
-  current,
-  onSelect,
+  filters,
+  onChange,
 }: {
-  current: MetricFilter;
-  onSelect: (next: MetricFilter) => void;
+  filters: PropertyFilters;
+  onChange: (patch: Partial<PropertyFilters>) => void;
 }) {
   const { data, isLoading } = useMetrics();
+
+  function click(c: CardDef) {
+    if (isActive(c, filters)) {
+      onChange({
+        statuses: DEFAULT_FILTERS.statuses,
+        ...(c.maxPrice !== undefined ? { maxPrice: DEFAULT_FILTERS.maxPrice } : {}),
+      });
+    } else {
+      onChange({
+        statuses: [c.status],
+        ...(c.maxPrice !== undefined ? { maxPrice: c.maxPrice } : {}),
+      });
+    }
+  }
 
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
       {CARDS.map((c) => {
-        const active = isCardActive(c.filter, current);
+        const active = isActive(c, filters);
         return (
           <button
             key={c.key}
             type="button"
             aria-pressed={active}
-            onClick={() => onSelect(active ? {} : c.filter)}
+            onClick={() => click(c)}
             className={cn(
               "rounded-md border bg-card px-3 py-2 text-left transition-colors hover:border-primary/60",
               active ? "border-primary" : "border-border",
